@@ -1,6 +1,3 @@
-// list_windows.cpp
-// Build with: g++ -O2 list_windows.cpp -o list_windows -lX11 -lXmu -ljsoncpp
-
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <unistd.h>
@@ -12,9 +9,6 @@
 #include <sstream>
 #include <jsoncpp/json/json.h>
 
-// -------------------------------------------------------------
-// Helper: read UTF-8 text property from window
-// -------------------------------------------------------------
 std::string getTextProperty(Display *dpy, Window win, const char *atomName) {
     Atom atom = XInternAtom(dpy, atomName, True);
     if (atom == None)
@@ -37,9 +31,6 @@ std::string getTextProperty(Display *dpy, Window win, const char *atomName) {
     return result;
 }
 
-// -------------------------------------------------------------
-// Window Type Check
-// -------------------------------------------------------------
 bool isNormalWindow(Display *dpy, Window win) {
     Atom atomType = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", True);
     Atom atomNormal = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_NORMAL", False);
@@ -71,9 +62,6 @@ bool isNormalWindow(Display *dpy, Window win) {
     return normal;
 }
 
-// -------------------------------------------------------------
-// PID and process resolution
-// -------------------------------------------------------------
 int getPID(Display *dpy, Window win) {
     Atom atomPID = XInternAtom(dpy, "_NET_WM_PID", True);
     if (atomPID == None)
@@ -108,9 +96,6 @@ std::string getProcessName(int pid) {
     return name.empty() ? "(unknown)" : name;
 }
 
-// -------------------------------------------------------------
-// Data Object
-// -------------------------------------------------------------
 struct WindowInfo {
     std::string title;
     int pid;
@@ -118,9 +103,6 @@ struct WindowInfo {
     int x, y, width, height;
 };
 
-// -------------------------------------------------------------
-// Enumerate all normal windows
-// -------------------------------------------------------------
 std::vector<WindowInfo> listWindows(Display *dpy) {
     std::vector<WindowInfo> out;
     Atom atomClientList = XInternAtom(dpy, "_NET_CLIENT_LIST", True);
@@ -172,9 +154,7 @@ std::vector<WindowInfo> listWindows(Display *dpy) {
                            return out;
 }
 
-// -------------------------------------------------------------
-// Main
-// -------------------------------------------------------------
+
 int main() {
     Display *dpy = XOpenDisplay(nullptr);
     if (!dpy) {

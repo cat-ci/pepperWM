@@ -1,9 +1,3 @@
-// control_window.cpp
-// Usage: ./control_window <PID> <X> <Y> <WIDTH> <HEIGHT>
-// Moves/resizes window safely (handles SSD/CSD + removes fullscreen/maximize)
-//
-// Build: g++ -O2 control_window.cpp -o control_window -lX11 -lXmu
-
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <iostream>
@@ -11,9 +5,7 @@
 #include <cstring>
 #include <cstdlib>
 
-// ------------------------------------------------------
-// Enumerate all windows from root
-// ------------------------------------------------------
+
 std::vector<Window> getAllWindows(Display* dpy) {
     std::vector<Window> wins;
     Atom clientList = XInternAtom(dpy, "_NET_CLIENT_LIST", True);
@@ -33,9 +25,7 @@ std::vector<Window> getAllWindows(Display* dpy) {
         return wins;
 }
 
-// ------------------------------------------------------
-// Get PID for window
-// ------------------------------------------------------
+
 int getPID(Display* dpy, Window w) {
     Atom atom = XInternAtom(dpy, "_NET_WM_PID", True);
     Atom type;
@@ -54,9 +44,7 @@ int getPID(Display* dpy, Window w) {
         return pid;
 }
 
-// ------------------------------------------------------
-// _NET_FRAME_EXTENTS for SSD adjustments
-// ------------------------------------------------------
+
 bool getFrameExtents(Display* dpy, Window w,
                      int& left, int& right, int& top, int& bottom) {
     Atom atom = XInternAtom(dpy, "_NET_FRAME_EXTENTS", True);
@@ -81,16 +69,12 @@ bool getFrameExtents(Display* dpy, Window w,
     return true;
                      }
 
-                     // ------------------------------------------------------
-                     // Remove fullscreen / maximized states before resizing
-                     // ------------------------------------------------------
                      void clearWindowStates(Display* dpy, Window w) {
                          Atom wmState = XInternAtom(dpy, "_NET_WM_STATE", False);
                          Atom fs = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
                          Atom maxH = XInternAtom(dpy, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
                          Atom maxV = XInternAtom(dpy, "_NET_WM_STATE_MAXIMIZED_VERT", False);
 
-                         // Prepare client message to toggle off those states
                          auto sendState = [&](Atom stateAtom) {
                              XEvent e;
                              std::memset(&e, 0, sizeof(e));
@@ -99,10 +83,10 @@ bool getFrameExtents(Display* dpy, Window w,
                              e.xclient.display = dpy;
                              e.xclient.window = w;
                              e.xclient.format = 32;
-                             e.xclient.data.l[0] = 0;  // _NET_WM_STATE_REMOVE
+                             e.xclient.data.l[0] = 0;
                              e.xclient.data.l[1] = stateAtom;
                              e.xclient.data.l[2] = 0;
-                             e.xclient.data.l[3] = 1;  // Normal source
+                             e.xclient.data.l[3] = 1;
                              e.xclient.data.l[4] = 0;
 
                              XSendEvent(dpy, DefaultRootWindow(dpy), False,
@@ -115,9 +99,7 @@ bool getFrameExtents(Display* dpy, Window w,
                          XFlush(dpy);
                      }
 
-                     // ------------------------------------------------------
-                     // Request move & resize
-                     // ------------------------------------------------------
+
                      void sendMoveResize(Display* dpy, Window w,
                                          int x, int y, int width, int height) {
                          Atom moveresize = XInternAtom(dpy, "_NET_MOVERESIZE_WINDOW", False);
@@ -146,9 +128,6 @@ bool getFrameExtents(Display* dpy, Window w,
                          XFlush(dpy);
                                          }
 
-                                         // ------------------------------------------------------
-                                         // Main
-                                         // ------------------------------------------------------
                                          int main(int argc, char* argv[]) {
                                              if (argc != 6) {
                                                  std::cerr << "Usage: " << argv[0]
@@ -175,14 +154,13 @@ bool getFrameExtents(Display* dpy, Window w,
                                                  int pid = getPID(dpy, w);
                                                  if (pid == targetPID) {
                                                      found = true;
-                                                     clearWindowStates(dpy, w);  // 🧠 Important: remove fullscreen/maximized first
+                                                     clearWindowStates(dpy, w);
 
                                                      int left = 0, right = 0, top = 0, bottom = 0;
                                                      if (getFrameExtents(dpy, w, left, right, top, bottom)) {
                                                          std::cout << "Frame extents: L=" << left << " R=" << right
                                                          << " T=" << top << " B=" << bottom << "\n";
 
-                                                         // Adjust to match outer frame
                                                          x += left;
                                                          y += top;
                                                          width -= (left + right);
